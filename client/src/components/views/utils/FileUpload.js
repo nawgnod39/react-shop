@@ -1,69 +1,77 @@
-import React from 'react'
-import Dropzone from 'react-dropzone'
-import {Icon} from 'antd';
-import axios from 'axios';
+import React, { useState } from 'react'
+import Dropzone from 'react-dropzone';
+import { Icon } from 'antd';
+import Axios from 'axios';
+function FileUpload(props) {
 
-//frontend 에서 파일을back end 에 전달을하고 backend 에서는 파일을 저장한다 이를위해 multer이 필요하며  파일저장정보를 front end 로 전달해준다 .
-//전해주기위해서 axios 사용
-function FileUpload() {
-   
+    const [Images, setImages] = useState([])
 
+    const onDrop = (files) => {
 
-    const [Image,setImages] = useState([])
-   
-    const dropHandler=(files)=>{
-        
-        let formData = new FormDate();
+        let formData = new FormData();
         const config = {
-
-            header:{'content-type':'multipart/form-data'}
+            header: { 'content-type': 'multipart/form-data' }
         }
-    
-        formData.append("file",files[0])
+        formData.append("file", files[0])
+        //save the Image we chose inside the Node Server 
+        Axios.post('/api/product/uploadImage', formData, config)
+            .then(response => {
+                if (response.data.success) {
 
-        axios.post('/api/product/image',formData,config)//fort에서만 할것들 처리 
-        .ten(reasponse=>{
-            if(response.data.success){
-                console.log(response.data)
+                    setImages([...Images, response.data.image])
+                    props.refreshFunction([...Images, response.data.image])
 
-                setImages([...setImages,response.data.filepPath])
-
-            }else{
-                alert("파일을 저장하는데 실패했습니다.")
-                    
-            }
-
-        })
-        //formData와 config를 같이 넣어주지않으면 오류가 발생 
-        }
+                } else {
+                    alert('Failed to save the Image in Server')
+                }
+            })
     }
 
 
+    const deleteHandler = (image) => {
+        const currentIndex = Images.indexOf(image);
 
+        let newImages = [...Images]
+        newImages.splice(currentIndex, 1)//splice가 현재 인덱스가 -부터 1까지의 어레이를 지워줌 
+
+        setImages(newImages)
+        props.refreshFunction(newImages)
+    }
 
     return (
-        <div style ={{display: 'flex', justifyContent:'space-between'}}>
-            <Dropzone onDrop={dropHandler}>
-            {({getRootProps, getInputProps}) => (
-                <section>
-                    style={{
-                        width: 300 ,height: 240, border: '1px solid lightgray',
-                        disply: 'flex', alignItems: 'center', justifyContent: 'center'
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Dropzone
+                onDrop={onDrop}
+                multiple={false}
+                maxSize={800000000}
+            >
+                {({ getRootProps, getInputProps }) => (
+                    <div style={{
+                        width: '300px', height: '240px', border: '1px solid lightgray',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}
-                     {...getRootProps()}
-                        <input{...getInputProps()}/>
-                        <Icon type= "plus" style= {{fontSize: '3rem'}}/>
-                   
-                </section>        
-            )}
+                        {...getRootProps()}
+                    >
+                        <input {...getInputProps()} />
+                        <Icon type="plus" style={{ fontSize: '3rem' }} />
+
+                    </div>
+                )}
             </Dropzone>
 
-            <div style={{display:'flex', width:'350px',height:'240px',overflow:'scroll'}}>
-                {Image.map((image,in))}
+            <div style={{ display: 'flex', width: '350px', height: '240px', overflowX: 'scroll' }}>
+
+                {Images.map((image, index) => (
+                    <div onClick={() => onDelete(image)}>
+                        <img style={{ minWidth: '300px', width: '300px', height: '240px' }} src={`http://localhost:5000/${image}`} alt={`productImg-${index}`} />
+                    </div>
+                ))}
+
+
             </div>
-            
+
         </div>
     )
-
+}
 
 export default FileUpload
