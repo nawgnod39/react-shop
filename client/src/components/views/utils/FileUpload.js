@@ -7,6 +7,9 @@ import axios from 'axios';
 //전해주기위해서 axios 사용
 function FileUpload() {
    
+
+
+    const [Image,setImages] = useState([])
    
     const dropHandler=(files)=>{
         
@@ -21,6 +24,9 @@ function FileUpload() {
         axios.post('/api/product/image',formData,config)//fort에서만 할것들 처리 
         .ten(reasponse=>{
             if(response.data.success){
+                console.log(response.data)
+
+                setImages([...setImages,response.data.filepPath])
 
             }else{
                 alert("파일을 저장하는데 실패했습니다.")
@@ -51,6 +57,11 @@ function FileUpload() {
                 </section>        
             )}
             </Dropzone>
+
+            <div style={{display:'flex', width:'350px',height:'240px',overflow:'scroll'}}>
+                {Image.map((image,in))}
+            </div>
+            
         </div>
     )
 
